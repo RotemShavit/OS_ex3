@@ -7,35 +7,57 @@ using namespace std;
 
 pthread_t* threads;
 
+pthread_mutex_t* map_mutexes;
+
 int numOfThreads;
 
 vector<vector<IntermediatePair>> all_inter_vec;
 
-std::atomic<int> atm(0);
+atomic<int> atm(0);
+atomic<int> numOfProcessed(0);
 
 typedef struct Context
 {
     int tid;
     const InputVec& inputVec;
+    pthread_mutex_t* mutex;
     // constructor
-    Context(int tid, const InputVec& inputVec):
+    Context(int tid, const InputVec& inputVec, pthread_mutex_t* mutex):
     //
-    tid(tid), inputVec(inputVec){}
+    tid(tid), inputVec(inputVec), mutex(mutex){}
     //
 }Context;
 
-void mapThreadFunc(const InputVec& inputVec, int tid)
+void mutexLock(pthread_mutex_t* mutex)
+{
+    if(pthread_mutex_lock(mutex))
+    {
+        //print error
+    }
+}
+
+void mutexUnLock(pthread_mutex_t* mutex)
+{
+    if(pthread_mutex_unlock(mutex))
+    {
+        //print error
+    }
+}
+
+void mapThreadFunc(Context* thread_context)
 {
     InputPair inputPair;
     IntermediatePair intermediatePair;
     int old_val;
-    while(atm < numOfThreads - 1)
+    while(atm < thread_context->inputVec.size())
     {
         old_val = atm.fetch_add(1);
-        inputPair = inputVec.at(old_val);
+        inputPair = thread_context->inputVec.at(old_val);
         void* context = &inputPair;
         emit2(intermediatePair.first, intermediatePair.second, context);
-        all_inter_vec.at(tid).push_back(intermediatePair);
+        mutexLock(thread_context->mutex);
+        all_inter_vec.at(thread_context->tid).push_back(intermediatePair);
+        mutexUnLock(thread_context->mutex);
     }
 }
 
@@ -49,11 +71,12 @@ void* threadFunc(void* context)
     auto thread_context = (Context*) context;
     if(threads[numOfThreads - 1] != thread_context->tid)
     {
-        mapThreadFunc(thread_context->inputVec, thread_context->tid);
+        mapThreadFunc(thread_context);
     }
     else
     {
         //run shuffle
+        shuffleThreadFunc();
     }
     return nullptr;
 }
@@ -65,9 +88,11 @@ JobHandle startMapReduceJob(const MapReduceClient& client,
 {
     numOfThreads = multiThreadLevel;
     threads = (pthread_t*)malloc(sizeof(pthread_t) * multiThreadLevel);
+    map_mutexes = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t) * multiThreadLevel);
     for(int i = 0; i < multiThreadLevel; i++)
     {
-        auto* context = new Context(threads[i], inputVec);
+        pthread_mutex_init(&map_mutexes[i], nullptr);
+        auto* context = new Context(threads[i], inputVec, &map_mutexes[i]);
         pthread_create(&threads[i], nullptr, threadFunc, context);
     }
 }
