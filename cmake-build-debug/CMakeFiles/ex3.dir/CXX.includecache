@@ -1,0 +1,30 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/MapReduceClient.h
+vector
+-
+map
+-
+utility
+-
+
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/MapReduceFramework.cpp
+pthread.h
+-
+MapReduceFramework.h
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/MapReduceFramework.h
+iostream
+-
+atomic
+-
+
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/MapReduceFramework.h
+MapReduceClient.h
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/MapReduceClient.h
+
