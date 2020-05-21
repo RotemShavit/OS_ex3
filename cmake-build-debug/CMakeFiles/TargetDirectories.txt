@@ -1,0 +1,3 @@
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/cmake-build-debug/CMakeFiles/ex3.dir
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/cmake-build-debug/CMakeFiles/edit_cache.dir
