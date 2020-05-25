@@ -19,6 +19,8 @@ pthread.h
 -
 MapReduceFramework.h
 /cs/usr/rotem.shavit/Desktop/OS2020/ex3/MapReduceFramework.h
+MapReduceClient.h
+/cs/usr/rotem.shavit/Desktop/OS2020/ex3/MapReduceClient.h
 iostream
 -
 atomic

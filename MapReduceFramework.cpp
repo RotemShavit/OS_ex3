@@ -17,7 +17,7 @@ vector<IntermediatePair>* all_inter_vec;
 IntermediateMap interMap;
 
 atomic<int> atm(0);
-atomic<int> numOfProcessed(0);
+atomic<int> finishedMap(0);
 
 typedef struct Context
 {
@@ -61,7 +61,7 @@ void mapThreadFunc(Context* thread_context)
 {
     InputPair inputPair;
     IntermediatePair intermediatePair;
-    int old_val;
+    int old_val = 0;
     while(atm < thread_context->inputVec.size())
     {
         old_val = atm.fetch_add(1);
@@ -71,29 +71,44 @@ void mapThreadFunc(Context* thread_context)
             thread_context->client.map(inputPair.first, inputPair.second, thread_context);
         }
     }
+    finishedMap.fetch_add(1);
 }
 
-void shuffleThreadFunc(Context* thread_context)
+
+void shuffleHelper()
 {
-    // while statement for map phase finished (barrier and atomic variable)
-    for(int i = 0; i < numOfThreads - 1; i++)
+    for (int i = 0; i < numOfThreads - 1; i++)
     {
-        while(!all_inter_vec[i].empty())
+        while (!all_inter_vec[i].empty())
         {
             mutexLock(&map_mutexes[i]);
             // if key in interMap, add to the specified key vector
             // else add a new key and a new value for it
             auto search = interMap.find(all_inter_vec[i].at(0).first);
-            if(search != interMap.end())
+            if (search != interMap.end())
             {
                 // insert the value to the key vector
+                search->second.push_back(all_inter_vec[i].at(0).second);
             }
             else
             {
                 // insert a new key map
+                vector<V2 *> v;
+                v.push_back(all_inter_vec[i].at(0).second);
+                interMap.insert(pair<K2 *, vector<V2 *>>(all_inter_vec[i].at(0).first, v));
             }
             mutexUnLock(&map_mutexes[i]);
         }
+    }
+}
+
+
+void shuffleThreadFunc(Context* thread_context)
+{
+    // while statement for map phase finished (barrier and atomic variable)
+    while(finishedMap < numOfThreads - 1)
+    {
+        shuffleHelper();
     }
 }
 
